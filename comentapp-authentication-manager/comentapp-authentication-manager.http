@@ -1,0 +1,6 @@
+@comentapp_authentication_manager_HostAddress = http://localhost:5298
+
+GET {{comentapp_authentication_manager_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
