@@ -1,15 +1,20 @@
 ﻿using AutoMapper;
+using comentapp_authentication_manager.Core;
 using comentapp_authentication_manager.DTOs;
 using comentapp_authentication_manager.Models;
+using comentapp_authentication_manager.Repository;
+using comentapp_authentication_manager.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace comentapp_authentication_manager.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AuthenticationController(IMapper _mapper) : ControllerBase
+    public class AuthenticationController(IUserService _userService) : ControllerBase
     {
+
         [HttpGet]
         public IActionResult Get()
         {
@@ -30,11 +35,17 @@ namespace comentapp_authentication_manager.Controllers
 
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] Register_Req request)
+        public async Task<IActionResult> RegisterAsync([FromBody] Register_Req request)
         {
-            var newUser = _mapper.Map<User>(request);
+            var result = await _userService.RegisterUser(request);
+            if(result.IsSuccess)
+                return Ok(result.Value);
 
-            return Ok(newUser);
+            if (result.ErrorCode == (int)UserServiceErrorCodes.CU_EmailAlreadyExists 
+                || result.ErrorCode == (int)UserServiceErrorCodes.CU_UsernameAlreadyExists)
+                return Conflict(new { Message = result.ErrorMessage });
+
+            return StatusCode(500, result.ErrorMessage);
         }
     }
 }

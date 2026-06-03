@@ -11,6 +11,8 @@ namespace comentapp_authentication_manager.Mapper
                 {
                     destination.CreatedDate = DateTime.UtcNow;
                     destination.LastModifiedDate = DateTime.UtcNow;
+
+                    destination.PasswordHash = source.Password!;
                 });
         }
     }

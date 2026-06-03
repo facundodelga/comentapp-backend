@@ -1,5 +1,9 @@
 using comentapp_authentication_manager.Data;
 using comentapp_authentication_manager.Mapper;
+using comentapp_authentication_manager.Repository;
+using comentapp_authentication_manager.Repository.Implementation;
+using comentapp_authentication_manager.Services;
+using comentapp_authentication_manager.Services.Implementation;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,10 +19,17 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ComentappDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IUserService, UserService>();
+
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<AuthenticationMapperProfile>();
 });
+
+builder.Services.AddLogging();
 
 var app = builder.Build();
 

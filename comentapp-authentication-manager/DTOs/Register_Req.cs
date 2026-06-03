@@ -9,7 +9,8 @@ namespace comentapp_authentication_manager.DTOs
         public string? ConfirmPassword { get; set; }
         public string? Name { get; set; }
         public string? Surname { get; set; }
-        
+        public string? UserName { get; set; }
+
     }
 
     public class Register_Req_Validation : AbstractValidator<Register_Req>
@@ -29,6 +30,8 @@ namespace comentapp_authentication_manager.DTOs
                 .NotEmpty().WithMessage("El nombre es obligatorio.");
             RuleFor(x => x.Surname)
                 .NotEmpty().WithMessage("El apellido es obligatorio.");
+            RuleFor(x => x.UserName)
+                .NotEmpty().WithMessage("El nombre de usuario es obligatorio.");
         }
     }
 }

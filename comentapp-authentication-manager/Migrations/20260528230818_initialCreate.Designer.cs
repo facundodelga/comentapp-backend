@@ -12,8 +12,8 @@ using comentapp_authentication_manager.Data;
 namespace comentapp_authentication_manager.Migrations
 {
     [DbContext(typeof(ComentappDbContext))]
-    [Migration("20260528221643_create")]
-    partial class create
+    [Migration("20260528230818_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,8 +27,11 @@ namespace comentapp_authentication_manager.Migrations
 
             modelBuilder.Entity("comentapp_authentication_manager.Models.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
