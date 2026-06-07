@@ -38,5 +38,11 @@ namespace comentapp_authentication_manager.Repository.Implementation
             _context.SaveChanges();
             return i.Entity;
         }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
     }
 }

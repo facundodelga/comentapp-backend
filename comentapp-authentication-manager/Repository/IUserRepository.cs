@@ -11,5 +11,6 @@ namespace comentapp_authentication_manager.Repository
         Task<bool> EmailExistsAsync(string email);
         Task<bool> UsernameExistsAsync(string username);
         Task<User> CreateUserAsync(User user);
+        Task UpdateUserAsync(User user);
     }
 }

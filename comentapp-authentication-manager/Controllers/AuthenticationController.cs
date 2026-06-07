@@ -21,16 +21,42 @@ namespace comentapp_authentication_manager.Controllers
             return Ok("Identidad funcionando correctamente");
         }
 
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] Login_Req request)
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmail_Req request)
         {
-            // TODO: Implementar lógica de validación con base de datos y generación de JWT
-            if (request.Email == "admin" && request.Password == "123456")
+            var result = await _userService.ConfirmEmailAsync(request);
+
+            if(result.IsSuccess)
+                return Ok(new
+                {
+                    message = "Email confirmado correctamente."
+                });
+
+            return BadRequest(result.ErrorMessage);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginAsync([FromBody] Login_Req request)
+        {
+            var result = await _userService.LoginUser(request);
+
+            if (!result.IsSuccess)
             {
-                return Ok(new { Token = "ejemplo-de-token-jwt" });
+                return Unauthorized(new
+                {
+                    message = "Credenciales inválidas"
+                });
             }
 
-            return Unauthorized(new { Mensaje = "Credenciales incorrectas" });
+            if (!result.Value.IsEmailConfirmed)
+            {
+                return Unauthorized(new
+                {
+                    message = "Correo electrónico no confirmado"
+                });
+            }
+
+            return Ok(result);
         }
 
 

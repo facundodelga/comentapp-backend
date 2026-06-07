@@ -4,5 +4,6 @@
     {
         CU_EmailAlreadyExists,
         CU_UsernameAlreadyExists,
+        LU_UserNotFound,
     }
 }

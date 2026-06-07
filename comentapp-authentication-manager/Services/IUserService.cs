@@ -8,5 +8,6 @@ namespace comentapp_authentication_manager.Services
     {
         Task<Result<User>> RegisterUser(Register_Req register);
         Task<Result<User>> LoginUser(Login_Req login);
+        Task<Result<User>> ConfirmEmailAsync(ConfirmEmail_Req confirmEmail);
     }
 }
