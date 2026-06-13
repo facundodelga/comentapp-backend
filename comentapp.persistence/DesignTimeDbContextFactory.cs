@@ -10,8 +10,7 @@ namespace comentapp.persistence
         {
             // Lee appsettings desde la API para no duplicar config
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),
-                             "C:\\Users\\Usuario\\Documents\\Repositorios\\comentApp\\comentapp-backend\\comentapp-authentication-manager\\appsettings.json"))
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../comentapp.authentication.manager"))
                 .AddJsonFile("appsettings.json")
                 .AddJsonFile("appsettings.Development.json", optional: true)
                 .Build();

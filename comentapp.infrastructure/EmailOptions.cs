@@ -1,4 +1,4 @@
-﻿namespace Comentapp.AuthenticationManager.Endpoint.Security
+﻿namespace comentapp.infrastructure
 {
     public class EmailOptions
     {

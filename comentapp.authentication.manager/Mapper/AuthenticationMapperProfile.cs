@@ -1,5 +1,5 @@
-﻿using Comentapp.AuthenticationManager.Endpoint.DTOs;
-using Comentapp.AuthenticationManager.Endpoint.Models;
+﻿using comentapp.persistence.Models;
+using Comentapp.AuthenticationManager.Endpoint.DTOs;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Mapper
 {

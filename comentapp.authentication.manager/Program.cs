@@ -1,12 +1,15 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using comentapp.infrastructure.Modules;
+using comentapp.persistence;
+using comentapp.persistence.Models;
+using Comentapp.AuthenticationManager.Endpoint.Mapper;
 using Comentapp.AuthenticationManager.Endpoint.Security;
 using Comentapp.AuthenticationManager.Endpoint.Services;
 using Comentapp.AuthenticationManager.Endpoint.Services.Implementation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
-using Autofac;
-using comentapp.persistence;
-using Comentapp.AuthenticationManager.Endpoint.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -15,28 +18,22 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//Autofac
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 builder.Host.ConfigureContainer<ContainerBuilder>((context,containerBuilder) =>
 {
     containerBuilder.RegisterModule(new DatabaseModule(context.Configuration));
+    containerBuilder.RegisterModule(new EmailModule(context.Configuration));
 });
 
 builder.Services.AddDataProtection()
-    .SetApplicationName("ComentAppAuth")
     .PersistKeysToDbContext<ComentappDbContext>();
-
-builder.Services.Configure<EmailOptions>(
-    builder.Configuration.GetSection(EmailOptions.Section));
-
 
 builder.Services.AddScoped<AppCookieEvents>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<IUserService, UserService>();
-
-builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
-builder.Services.AddScoped<IEmailSender, EmailSender>();
-builder.Services.AddTransient<IEmailTemplateRenderer, EmailTemplateRenderer>();
 
 builder.Services.AddAutoMapper(cfg =>
 {

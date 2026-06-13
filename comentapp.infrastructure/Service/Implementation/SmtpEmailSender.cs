@@ -1,17 +1,17 @@
-﻿using comentapp_authentication_manager.Security;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 
 
-namespace comentapp.infrastructure.Email
+namespace comentapp.infrastructure.Service.Implementation
 {
-    public class EmailSender(ILogger<EmailSender> logger, IOptions<EmailOptions> options) : IEmailSender
+    public class SmtpEmailSender(ILogger<SmtpEmailSender> logger, EmailOptions options) : ISmtpEmailSender
     {
-        private readonly ILogger<EmailSender> _logger = logger;
-        private readonly EmailOptions _options = options.Value;
+        private readonly ILogger<SmtpEmailSender> _logger = logger;
+        private readonly EmailOptions _options = options;
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {

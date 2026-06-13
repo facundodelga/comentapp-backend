@@ -1,11 +1,7 @@
 ﻿using AutoMapper;
 using Comentapp.AuthenticationManager.Endpoint.Core;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
-using Comentapp.AuthenticationManager.Endpoint.Models;
-using Comentapp.Infrastructure.Persistence;
 using Comentapp.AuthenticationManager.Endpoint.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Controllers

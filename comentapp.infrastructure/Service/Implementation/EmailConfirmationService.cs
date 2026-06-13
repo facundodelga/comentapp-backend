@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 
-namespace comentapp.infrastructure.Email
+namespace comentapp.infrastructure.Service.Implementation
 {
     public class EmailConfirmationService : IEmailConfirmationService
     {

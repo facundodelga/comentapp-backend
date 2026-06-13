@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
+using comentapp.infrastructure.Service;
+using comentapp.persistence.Models;
+using comentapp.persistence.Repository;
 using Comentapp.AuthenticationManager.Endpoint.Core;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
-using Comentapp.AuthenticationManager.Endpoint.Models;
-using Comentapp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
 {
@@ -15,7 +15,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
         IConfiguration configuration,
         IUserRepository userRepository,
         IEmailConfirmationService emailConfirmationService,
-        IEmailSender emailSender,
+        ISmtpEmailSender emailSender,
         IEmailTemplateRenderer templateRenderer
         ) : IUserService
     {
@@ -25,7 +25,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
         private readonly IMapper _mapper = mapper;
         private readonly ILogger _logger = logger;
         private readonly IEmailConfirmationService _emailConfirmationService = emailConfirmationService;
-        private readonly IEmailSender _emailSender = emailSender;
+        private readonly ISmtpEmailSender _emailSender = emailSender;
         private readonly IEmailTemplateRenderer _templateRenderer = templateRenderer;
 
         public async Task<Result<User>> ConfirmEmailAsync(ConfirmEmail_Req confirmEmail)

@@ -1,6 +1,6 @@
-﻿namespace comentapp.infrastructure.Email
+﻿namespace comentapp.infrastructure.Service
 {
-    public interface IEmailSender
+    public interface ISmtpEmailSender
     {
         Task SendEmailAsync(string to, string subject, string body);
     }

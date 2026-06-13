@@ -1,6 +1,6 @@
-﻿using Comentapp.AuthenticationManager.Endpoint.Core;
+﻿using comentapp.persistence.Models;
+using Comentapp.AuthenticationManager.Endpoint.Core;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
-using Comentapp.AuthenticationManager.Endpoint.Models;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Services
 {

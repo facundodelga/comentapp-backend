@@ -1,16 +1,32 @@
 ﻿using Autofac;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using comentapp.infrastructure.Service;
+using comentapp.infrastructure.Service.Implementation;
+using Microsoft.Extensions.Configuration;
 
 namespace comentapp.infrastructure.Modules
 {
     public class EmailModule : Module
     {
+        private readonly IConfiguration _configuration;
+
+        public EmailModule(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         protected override void Load(ContainerBuilder builder)
         {
+            // Registra las opciones de email
+            builder.Register(_ =>
+            {
+                var options = new EmailOptions();
+                _configuration.GetSection(EmailOptions.Section).Bind(options);
+                return options;
+            }).SingleInstance();
+
+            // Registra los servicios
             builder.RegisterType<SmtpEmailSender>()
-                   .As<IEmailSender>()
+                   .As<ISmtpEmailSender>()
                    .InstancePerLifetimeScope();
 
             builder.RegisterType<EmailTemplateRenderer>()

@@ -1,4 +1,4 @@
-﻿namespace comentapp.infrastructure.Email
+﻿namespace comentapp.infrastructure.Service
 {
     public interface IEmailConfirmationService
     {

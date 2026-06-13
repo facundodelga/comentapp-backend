@@ -1,4 +1,5 @@
-﻿namespace comentapp.infrastructure.Email
+﻿using Microsoft.AspNetCore.Hosting;
+namespace comentapp.infrastructure.Service
 {
     public class EmailTemplateRenderer : IEmailTemplateRenderer
     {
@@ -11,7 +12,12 @@
 
         public async Task<string> RenderAsync(string templateName, Dictionary<string, string> variables)
         {
-            var path = Path.Combine(_env.ContentRootPath, "Templates", "Emails", templateName);
+            var path = Path.Combine(
+                            AppContext.BaseDirectory,
+                            "Templates",
+                            "Emails",
+                            templateName
+                        );
 
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Template no encontrado: {path}");

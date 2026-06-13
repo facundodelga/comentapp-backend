@@ -10,18 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Templates\Emails\confirm-email.html" />
-  </ItemGroup>
-
-
-
-    <ItemGroup>
-	    <Content Include="Templates\Emails\**">
-		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	    </Content>
-    </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Autofac" Version="9.1.0" />
     <PackageReference Include="AutoMapper" Version="16.1.1" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
@@ -35,11 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Migrations\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\comentapp.infrastructure\comentapp.infrastructure.csproj" />
     <ProjectReference Include="..\comentapp.persistence\comentapp.persistence.csproj" />
   </ItemGroup>
 

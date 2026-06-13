@@ -15,22 +15,30 @@ namespace comentapp.persistence
 
         protected override void Load(ContainerBuilder builder)
         {
-            // El módulo se configura solo
-            var connectionString = _configuration.GetConnectionString("DefaultConnection")!;
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("No se encontró la connection string 'DefaultConnection'.");
+            }
 
             builder.RegisterAssemblyTypes(ThisAssembly)
                    .Where(t => t.Name.EndsWith("Repository"))
                    .AsImplementedInterfaces()
                    .InstancePerLifetimeScope();
 
-            // Si necesitás DbContextOptions dentro del módulo
             builder.Register(_ =>
             {
-                var options = new DbContextOptionsBuilder<ComentappDbContext>()
+                return new DbContextOptionsBuilder<ComentappDbContext>()
                     .UseSqlServer(connectionString)
                     .Options;
-                return options;
-            }).SingleInstance();
+            })
+            .As<DbContextOptions<ComentappDbContext>>()
+            .SingleInstance();
+
+            builder.RegisterType<ComentappDbContext>()
+                   .AsSelf()
+                   .InstancePerLifetimeScope();
         }
     }
 }

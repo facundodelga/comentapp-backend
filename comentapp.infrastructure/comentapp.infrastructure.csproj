@@ -8,7 +8,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Service\Implementation\EmailSender.cs~RFe5b9e50.TMP" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Templates\Emails\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Autofac" Version="9.1.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
   </ItemGroup>
 
 </Project>
