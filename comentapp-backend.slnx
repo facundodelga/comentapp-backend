@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="comentapp-authentication-manager/comentapp-authentication-manager.csproj" />
+  <Project Path="comentapp.authentication.manager/comentapp.authenticationmanager.endpoint.csproj" />
+  <Project Path="comentapp.infrastructure/comentapp.infrastructure.csproj" />
+  <Project Path="comentapp.persistence/comentapp.persistence.csproj" />
 </Solution>
