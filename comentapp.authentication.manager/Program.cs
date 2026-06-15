@@ -1,16 +1,11 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using comentapp.authentication.businessLogic;
-using comentapp.authentication.businessLogic.Services;
-using comentapp.authentication.businessLogic.Services.Implementation;
-using comentapp.infrastructure.Modules;
 using comentapp.persistence;
-using comentapp.persistence.Models;
 using Comentapp.AuthenticationManager.Endpoint.Mapper;
 using Comentapp.AuthenticationManager.Endpoint.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -31,9 +26,6 @@ builder.Services.AddDataProtection()
     .PersistKeysToDbContext<ComentappDbContext>();
 
 builder.Services.AddScoped<AppCookieEvents>();
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-
-builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
