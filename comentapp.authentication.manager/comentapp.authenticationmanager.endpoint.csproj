@@ -23,8 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\comentapp.infrastructure\comentapp.infrastructure.csproj" />
-    <ProjectReference Include="..\comentapp.persistence\comentapp.persistence.csproj" />
+    <ProjectReference Include="..\comentapp.authentication.businessLogic\comentapp.authentication.businessLogic.csproj" />
   </ItemGroup>
 
 </Project>

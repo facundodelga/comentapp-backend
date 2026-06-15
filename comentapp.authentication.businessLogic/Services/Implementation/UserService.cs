@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
+using comentapp.authentication.businessLogic.Core;
+using comentapp.authentication.businessLogic.DTOs;
 using comentapp.infrastructure.Service;
 using comentapp.persistence.Models;
 using comentapp.persistence.Repository;
-using Comentapp.AuthenticationManager.Endpoint.Core;
-using Comentapp.AuthenticationManager.Endpoint.DTOs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
+namespace comentapp.authentication.businessLogic.Services.Implementation
 {
     public class UserService(
         IMapper mapper,
@@ -28,10 +30,12 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
         private readonly ISmtpEmailSender _emailSender = emailSender;
         private readonly IEmailTemplateRenderer _templateRenderer = templateRenderer;
 
-        public async Task<Result<User>> ConfirmEmailAsync(ConfirmEmail_Req confirmEmail)
+        public async Task<Result<User>> ConfirmEmailAsync(ConfirmMailDTO confirmEmail)
         {
-            _logger.LogInformation($"Intentando confirmar el email del usuario: {confirmEmail.Email}");
-            var user = await _userRepository.GetByEmailAsync(confirmEmail.Email);
+            var confirmEmailDTO = confirmEmail.User.Email;
+
+            _logger.LogInformation($"Intentando confirmar el email del usuario: {confirmEmailDTO}");
+            var user = await _userRepository.GetByEmailAsync(confirmEmailDTO);
 
             if (user == null)
             {
@@ -39,7 +43,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
             }
             _logger.LogInformation("TOKEN RECIBIDO: {Token}", confirmEmail.Token);
             _logger.LogInformation("TOKEN RECIBIDO LENGTH: {Length}", confirmEmail.Token.Length);
-            var validationToken = _emailConfirmationService.ValidateToken(confirmEmail.Token, confirmEmail.Email);
+            var validationToken = _emailConfirmationService.ValidateToken(confirmEmail.Token, confirmEmailDTO);
 
             if(validationToken == null)
             {
@@ -55,12 +59,15 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
 
             await _userRepository.UpdateUserAsync(user);
 
+            await _userRepository.SaveChangesAsync();
+
             return Result<User>.Success(user);
         }
 
-        public async Task<Result<User>> LoginUser(Login_Req login)
+        public async Task<Result<User>> LoginUser(LoginDTO login)
         {
-            var user = await _userRepository.GetByEmailAsync(login.Email);
+            var loginUser = login.User;
+            var user = await _userRepository.GetByEmailAsync(loginUser.Email);
 
             if (user == null)
             {
@@ -69,7 +76,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
 
             var passwordResult = _passwordHasher.VerifyHashedPassword(user,
                                                                       user.PasswordHash,
-                                                                      login.Password
+                                                                      loginUser.PasswordHash
                                                                     );
 
             if(passwordResult == PasswordVerificationResult.Failed)
@@ -80,9 +87,10 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
             return Result<User>.Success(user);
         }
 
-        public async Task<Result<User>> RegisterUser(Register_Req register)
+        public async Task<Result<User>> RegisterUser(RegisterDTO register)
         {
-            var newUser = _mapper.Map<User>(register);
+            var newUser = register.User;
+
             _logger.LogInformation($"Intentando crear el usuario: {newUser}");
 
 
@@ -101,7 +109,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
             }
             try
             {
-                newUser.PasswordHash = _passwordHasher.HashPassword(newUser, register.Password!);
+                newUser.PasswordHash = _passwordHasher.HashPassword(newUser, newUser.PasswordHash);
                 var response = await _userRepository.CreateUserAsync(newUser);
 
                 var token = _emailConfirmationService.GenerateToken(newUser.Id, newUser.Email);
@@ -129,6 +137,8 @@ namespace Comentapp.AuthenticationManager.Endpoint.Services.Implementation
                     "Confirmá tu cuenta",
                     htmlBody
                 );
+
+                await _userRepository.SaveChangesAsync();
 
                 return Result<User>.Success(response);
 

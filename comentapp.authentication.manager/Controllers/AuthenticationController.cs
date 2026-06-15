@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
-using Comentapp.AuthenticationManager.Endpoint.Core;
+using comentapp.authentication.businessLogic.Core;
+using comentapp.authentication.businessLogic.DTOs;
+using comentapp.authentication.businessLogic.Services;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
-using Comentapp.AuthenticationManager.Endpoint.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AuthenticationController(IUserService _userService) : ControllerBase
+    public class AuthenticationController(IMapper _mapper, IUserService _userService) : ControllerBase
     {
 
         [HttpGet]
@@ -20,7 +21,8 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmail_Req request)
         {
-            var result = await _userService.ConfirmEmailAsync(request);
+            var requestDto = _mapper.Map<ConfirmMailDTO>(request);
+            var result = await _userService.ConfirmEmailAsync(requestDto);
 
             if(result.IsSuccess)
                 return Ok(new
@@ -34,7 +36,9 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] Login_Req request)
         {
-            var result = await _userService.LoginUser(request);
+            var requestDto = _mapper.Map<LoginDTO>(request);
+            
+            var result = await _userService.LoginUser(requestDto);
 
             if (!result.IsSuccess)
             {
@@ -59,7 +63,9 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterAsync([FromBody] Register_Req request)
         {
-            var result = await _userService.RegisterUser(request);
+            var requestDto = _mapper.Map<RegisterDTO>(request);
+            var result = await _userService.RegisterUser(requestDto);
+
             if(result.IsSuccess)
                 return Ok(result.Value);
 

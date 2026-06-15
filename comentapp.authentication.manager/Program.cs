@@ -1,12 +1,13 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using comentapp.authentication.businessLogic;
+using comentapp.authentication.businessLogic.Services;
+using comentapp.authentication.businessLogic.Services.Implementation;
 using comentapp.infrastructure.Modules;
 using comentapp.persistence;
 using comentapp.persistence.Models;
 using Comentapp.AuthenticationManager.Endpoint.Mapper;
 using Comentapp.AuthenticationManager.Endpoint.Security;
-using Comentapp.AuthenticationManager.Endpoint.Services;
-using Comentapp.AuthenticationManager.Endpoint.Services.Implementation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -23,8 +24,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 builder.Host.ConfigureContainer<ContainerBuilder>((context,containerBuilder) =>
 {
-    containerBuilder.RegisterModule(new DatabaseModule(context.Configuration));
-    containerBuilder.RegisterModule(new EmailModule(context.Configuration));
+    containerBuilder.RegisterModule(new AuthenticationBusinessModule(context.Configuration));
 });
 
 builder.Services.AddDataProtection()

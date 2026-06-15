@@ -33,14 +33,13 @@ namespace comentapp.persistence.Repository.Implementation
         public async Task<User> CreateUserAsync(User user)
         {
             var i = await _context.Users.AddAsync(user);
-            _context.SaveChanges();
             return i.Entity;
         }
 
         public async Task UpdateUserAsync(User user)
         {
             _context.Users.Update(user);
-            await _context.SaveChangesAsync();
         }
+
     }
 }

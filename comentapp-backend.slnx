@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="comentapp.authentication.businessLogic/comentapp.authentication.businessLogic.csproj" Id="b74afe86-5d90-4913-b7ef-98ac51e40438" />
   <Project Path="comentapp.authentication.manager/comentapp.authenticationmanager.endpoint.csproj" />
   <Project Path="comentapp.infrastructure/comentapp.infrastructure.csproj" />
   <Project Path="comentapp.persistence/comentapp.persistence.csproj" />

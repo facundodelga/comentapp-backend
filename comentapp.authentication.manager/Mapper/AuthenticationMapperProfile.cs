@@ -1,4 +1,5 @@
-﻿using comentapp.persistence.Models;
+﻿using comentapp.authentication.businessLogic.DTOs;
+using comentapp.persistence.Models;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Mapper
@@ -7,13 +8,32 @@ namespace Comentapp.AuthenticationManager.Endpoint.Mapper
     {
         public AuthenticationMapperProfile()
         {
-            CreateMap<Register_Req, User>()
+            CreateMap<Register_Req, RegisterDTO>()
+                .ForPath(dest => dest.User.Email, opt => opt.MapFrom(src => src.Email))
+                .ForPath(dest => dest.User.Name, opt => opt.MapFrom(src => src.Name))
+                .ForPath(dest => dest.User.UserName, opt => opt.MapFrom(src => src.UserName))
+                .ForPath(dest => dest.User.Surname, opt => opt.MapFrom(src => src.Surname))
                 .AfterMap((source, destination) =>
                 {
-                    destination.CreatedDate = DateTime.UtcNow;
-                    destination.LastModifiedDate = DateTime.UtcNow;
+                    destination.User.CreatedDate = DateTime.UtcNow;
+                    destination.User.LastModifiedDate = DateTime.UtcNow;
 
-                    destination.PasswordHash = source.Password!;
+                    destination.User.PasswordHash = source.Password!;
+                });
+
+            CreateMap<Login_Req, LoginDTO>()
+                .AfterMap((source, destination) =>
+                {
+                    destination.User.Email = source.Email;
+
+                    destination.User.PasswordHash = source.Password!;
+                });
+
+            CreateMap<ConfirmEmail_Req, ConfirmMailDTO>()
+                .ForMember(dest => dest.Token, opt => opt.MapFrom(src => src.Token))
+                .AfterMap((source, destination) =>
+                {
+                    destination.User.Email = source.Email;
                 });
         }
     }

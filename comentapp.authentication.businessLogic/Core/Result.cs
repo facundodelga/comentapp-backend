@@ -1,4 +1,4 @@
-﻿namespace Comentapp.AuthenticationManager.Endpoint.Core
+﻿namespace comentapp.authentication.businessLogic.Core
 {
     public class Result<T>
     {
