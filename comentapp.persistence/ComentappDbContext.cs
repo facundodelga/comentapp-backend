@@ -13,6 +13,8 @@ namespace comentapp.persistence
 
         public DbSet<User> Users { get; set; }
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Setting> Settings { get; set; }
         //public DbSet<Models.UserCredentials> UserCredentials { get; set; }
     }
 }

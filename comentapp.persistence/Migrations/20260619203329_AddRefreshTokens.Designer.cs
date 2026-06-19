@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using comentapp.persistence;
 
@@ -11,9 +12,11 @@ using comentapp.persistence;
 namespace comentapp.persistence.Migrations
 {
     [DbContext(typeof(ComentappDbContext))]
-    partial class ComentappDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619203329_AddRefreshTokens")]
+    partial class AddRefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,24 +73,6 @@ namespace comentapp.persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.Setting", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("comentapp.persistence.Models.User", b =>

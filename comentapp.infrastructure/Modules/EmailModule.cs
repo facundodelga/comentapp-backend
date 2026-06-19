@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using comentapp.infrastructure.Options;
 using comentapp.infrastructure.Service;
 using comentapp.infrastructure.Service.Implementation;
 using Microsoft.Extensions.Configuration;

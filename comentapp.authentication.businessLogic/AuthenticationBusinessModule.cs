@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using comentapp.authentication.businessLogic.Provider;
+using comentapp.authentication.businessLogic.Provider.Implementations;
 using comentapp.infrastructure.Modules;
 using comentapp.persistence;
 using comentapp.persistence.Models;
@@ -15,6 +17,10 @@ namespace comentapp.authentication.businessLogic
             builder.RegisterType<PasswordHasher<User>>()
            .As<IPasswordHasher<User>>()
            .InstancePerLifetimeScope();
+
+            builder.RegisterType<AuthProviderFactory>()
+                   .As<IAuthProviderFactory>()
+                   .InstancePerLifetimeScope();
 
             // Escanea todos los servicios del assembly automáticamente
             builder.RegisterAssemblyTypes(ThisAssembly)

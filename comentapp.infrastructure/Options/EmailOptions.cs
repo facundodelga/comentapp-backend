@@ -1,4 +1,4 @@
-﻿namespace comentapp.infrastructure
+﻿namespace comentapp.infrastructure.Options
 {
     public class EmailOptions
     {

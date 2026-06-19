@@ -1,15 +1,29 @@
 ﻿using comentapp.authentication.businessLogic.Core;
 using comentapp.authentication.businessLogic.DTOs;
+using comentapp.authentication.businessLogic.Services;
 
 namespace comentapp.authentication.businessLogic.Provider.Implementations
 {
-    public class LocalAuthProvider : IAuthProvider
+    public class LocalAuthProvider(IUserService userService) : IAuthProvider
     {
         public string ProviderName => "local";
 
-        public Task<Result<AuthTokens>> AuthenticateAsync(LoginDTO request)
+        private readonly IUserService _userService = userService;
+
+        public async Task<Result<AuthTokens>> AuthenticateAsync(LoginDTO request)
         {
-            throw new NotImplementedException();
+            var userServiceResult = await _userService.LoginUser(request);
+
+            if(!userServiceResult.IsSuccess)
+            {
+                return Result<AuthTokens>.Failure(userServiceResult.ErrorMessage, userServiceResult.ErrorCode ?? 0);
+            }
+
+            return Result<AuthTokens>.Success(new AuthTokens
+            {
+                AccessToken = "userServiceResult.Value.AccessToken,",
+                RefreshToken = "userServiceResult.Value.RefreshToken"
+            });
         }
     }
 }
