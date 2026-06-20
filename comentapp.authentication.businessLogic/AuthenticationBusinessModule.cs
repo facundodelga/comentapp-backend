@@ -22,6 +22,12 @@ namespace comentapp.authentication.businessLogic
                    .As<IAuthProviderFactory>()
                    .InstancePerLifetimeScope();
 
+            // ✅ Así sí funciona la colección
+            builder.RegisterAssemblyTypes(ThisAssembly)
+                   .Where(t => t.IsAssignableTo<IAuthProvider>())
+                   .As<IAuthProvider>()
+                   .InstancePerLifetimeScope();
+
             // Escanea todos los servicios del assembly automáticamente
             builder.RegisterAssemblyTypes(ThisAssembly)
                    .Where(t => t.Name.EndsWith("Service"))
@@ -30,6 +36,7 @@ namespace comentapp.authentication.businessLogic
 
             builder.RegisterModule(new DatabaseModule(_configuration));
             builder.RegisterModule(new EmailModule(_configuration));
+            builder.RegisterModule(new JwtModule(_configuration));
 
 
         }

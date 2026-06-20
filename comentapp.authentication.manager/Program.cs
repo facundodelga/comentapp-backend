@@ -66,7 +66,7 @@ builder.Services.AddAuthentication(options =>
         OnRedirectToLogin = ctx =>
         {
             // Para APIs, retornar 401 en lugar de redirigir
-            if (ctx.Request.Path.StartsWithSegments("/api") || 
+            if (ctx.Request.Path.StartsWithSegments("/me") || 
                 ctx.Request.Path.StartsWithSegments("/session"))
             {
                 ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -79,7 +79,7 @@ builder.Services.AddAuthentication(options =>
         OnRedirectToAccessDenied = ctx =>
         {
             // Para APIs, retornar 403
-            if (ctx.Request.Path.StartsWithSegments("/api") || 
+            if (ctx.Request.Path.StartsWithSegments("/me") || 
                 ctx.Request.Path.StartsWithSegments("/session"))
             {
                 ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -128,7 +128,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins(builder.Configuration["Cors:AllowedOrigins"] ?? "https://localhost:3000")
+            .WithOrigins(builder.Configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();  // Importante para cookies

@@ -133,7 +133,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
             
             return Ok(new
             {
-                id = userId,
+                //id = userId,
                 name = userName,
                 email
             });
