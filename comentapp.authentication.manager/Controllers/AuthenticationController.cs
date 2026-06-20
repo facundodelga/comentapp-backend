@@ -5,6 +5,7 @@ using comentapp.authentication.businessLogic.Provider;
 using comentapp.authentication.businessLogic.Services;
 using comentapp.authentication.businessLogic.Services.Implementation;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -12,6 +13,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    
     public class AuthenticationController(
         IMapper _mapper, 
         IAuthProviderFactory _authProviderFactory, 
@@ -21,6 +23,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
     {
 
         [HttpGet]
+        [Authorize]
         public IActionResult Get()
         {
             return Ok("Identidad funcionando correctamente");
@@ -113,6 +116,27 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
             _cookieService.ClearAuthCookies(Response);
 
             return NoContent();
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public IActionResult GetMe()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            
+            if (userId == null)
+            {
+                return Unauthorized("Usuario no autenticado");
+            }
+            
+            return Ok(new
+            {
+                id = userId,
+                name = userName,
+                email
+            });
         }
     }
 }
