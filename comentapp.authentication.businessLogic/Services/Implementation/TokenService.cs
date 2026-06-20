@@ -72,16 +72,41 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             // Rotación — el token viejo se revoca y se emite uno nuevo
             await _refreshTokenRepository.RevokeByIdAsync(stored.Id);
 
-            var newAccess = GenerateAccessToken(stored.User);
-            var newRefresh = GenerateRefreshToken(stored.UserId);
+            var user = stored.User;
+            var newAccess = GenerateAccessToken(user);
+            var newRefresh = GenerateRefreshToken(user.Id);
 
             await _refreshTokenRepository.AddAsync(newRefresh);
             await _refreshTokenRepository.SaveChangesAsync();
+
             return Result<AuthTokens>.Success(new AuthTokens
             {
                 AccessToken = newAccess,
-                RefreshToken = newRefresh.Token
+                RefreshToken = newRefresh.Token,
+                UserId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                AuthProvider = "local"
             });
+        }
+
+        public async Task RevokeAsync(string refreshToken)
+        {
+            await _refreshTokenRepository.GetByTokenAsync(refreshToken).ContinueWith(async t =>
+            {
+                var token = t.Result;
+                if (token is not null)
+                {
+                    await _refreshTokenRepository.RevokeByIdAsync(token.Id);
+                    await _refreshTokenRepository.SaveChangesAsync();
+                }
+            });
+        }
+
+        public async Task SaveRefreshTokenAsync(RefreshToken refreshToken)
+        {
+            await _refreshTokenRepository.AddAsync(refreshToken);
+            await _refreshTokenRepository.SaveChangesAsync();
         }
     }
 }

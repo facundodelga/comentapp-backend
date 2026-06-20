@@ -38,19 +38,21 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
 
             if (user == null)
             {
+                LogInformation("Email no encontrado");
                 return Result<User>.Failure("Usuario no encontrado", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
-            LogInformation($"TOKEN RECIBIDO: {confirmEmail.Token}");
-            LogInformation($"TOKEN RECIBIDO LENGTH: {confirmEmail.Token.Length}");
+
             var validationToken = _emailConfirmationService.ValidateToken(confirmEmail.Token, confirmEmailDTO);
 
             if(validationToken == null)
             {
+                LogInformation("Token inválido o expirado");
                 return Result<User>.Failure("Token inválido o expirado", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
 
             if(user.IsEmailConfirmed)
             {
+                LogInformation("El email ya ha sido confirmado");
                 return Result<User>.Failure("El email ya ha sido confirmado", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
 
@@ -70,7 +72,8 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
 
             if (user == null)
             {
-                return Result<User>.Failure("Usuario no encontrado", (int)UserServiceErrorCodes.LU_UserNotFound);
+                LogInformation("Email no encontrado");
+                return Result<User>.Failure("Usuario no encontrado, revisar email y contraseña", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
 
             var passwordResult = _passwordHasher.VerifyHashedPassword(user,
@@ -80,7 +83,13 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
 
             if(passwordResult == PasswordVerificationResult.Failed)
             {
-                return Result<User>.Failure("Contraseña incorrecta", (int)UserServiceErrorCodes.LU_UserNotFound);
+                LogInformation("Contraseña incorrecta");
+                return Result<User>.Failure("Usuario no encontrado, revisar email y contraseña", (int)UserServiceErrorCodes.LU_UserNotFound);
+            }
+
+            if(!user.IsEmailConfirmed) {
+                LogInformation("El usuario debe confirmar su email");
+                return Result<User>.Failure("El email no ha sido confirmado", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
 
             return Result<User>.Success(user);
@@ -142,7 +151,7 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             }
             catch (Exception ex)
             {
-                LogDebug($"Ocurrio un error al crear el usuario {ex.Message}");
+                LogError($"Ocurrio un error al crear el usuario {ex.Message}", ex);
                 return Result<User>.Failure($"Error al crear el usuario: {ex.Message}");
             }
             

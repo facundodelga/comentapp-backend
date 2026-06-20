@@ -6,25 +6,31 @@ using Comentapp.AuthenticationManager.Endpoint.Mapper;
 using Comentapp.AuthenticationManager.Endpoint.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
 
+// ========== Configuración Base ==========
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();  // Para acceso a HttpContext en servicios
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-//Autofac
+
+// ========== Autofac - IoC Container ==========
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
-builder.Host.ConfigureContainer<ContainerBuilder>((context,containerBuilder) =>
+builder.Host.ConfigureContainer<ContainerBuilder>((context, containerBuilder) =>
 {
     containerBuilder.RegisterModule(new AuthenticationBusinessModule(context.Configuration));
 });
 
+// ========== Data Protection ==========
 builder.Services.AddDataProtection()
     .PersistKeysToDbContext<ComentappDbContext>();
 
+// ========== AutoMapper ==========
 builder.Services.AddScoped<AppCookieEvents>();
 
 builder.Services.AddAutoMapper(cfg =>
@@ -32,10 +38,16 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<AuthenticationMapperProfile>();
 });
 
-builder.Services.AddAuthentication(options => {
+// ========== Autenticación Multi-Esquema ==========
+builder.Services.AddAuthentication(options =>
+{
+    // Esquema por defecto para cookies
     options.DefaultScheme = "AppCookie";
-    //options.DefaultChallengeScheme = "oidc";
-}).AddCookie("AppCookie", options =>
+    options.DefaultChallengeScheme = "AppCookie";
+    options.DefaultSignInScheme = "AppCookie";
+})
+// Cookie local para autenticación propia (email/contraseña)
+.AddCookie("AppCookie", options =>
 {
     options.Cookie.Name = "__Host-app_session";
     options.Cookie.SameSite = SameSiteMode.Strict;
@@ -44,45 +56,103 @@ builder.Services.AddAuthentication(options => {
     options.Cookie.Path = "/";
 
     options.SlidingExpiration = true;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);  // 8 horas con deslizamiento
 
     options.EventsType = typeof(AppCookieEvents);
 
-    options.Events ??= new CookieAuthenticationEvents();
-
-    options.Events.OnRedirectToLogin = ctx =>
+    // Manejo de redirecciones personalizadas
+    options.Events = new CookieAuthenticationEvents
     {
-        if (ctx.Request.Path.StartsWithSegments("/api"))
+        OnRedirectToLogin = ctx =>
         {
-            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            // Para APIs, retornar 401 en lugar de redirigir
+            if (ctx.Request.Path.StartsWithSegments("/api") || 
+                ctx.Request.Path.StartsWithSegments("/session"))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            ctx.Response.Redirect(ctx.RedirectUri);
             return Task.CompletedTask;
+        },
+        OnRedirectToAccessDenied = ctx =>
+        {
+            // Para APIs, retornar 403
+            if (ctx.Request.Path.StartsWithSegments("/api") || 
+                ctx.Request.Path.StartsWithSegments("/session"))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+
+            ctx.Response.Redirect(ctx.RedirectUri);
+            return Task.CompletedTask;
+        },
+        OnValidatePrincipal = ctx =>
+        {
+            // Llamar al validador personalizado
+            return ctx.HttpContext.RequestServices
+                .GetRequiredService<AppCookieEvents>()
+                .ValidatePrincipal(ctx);
         }
-
-        ctx.Response.Redirect(ctx.RedirectUri);
-        return Task.CompletedTask;
     };
+})
+// Cookie para autenticación externa (Google OAuth, etc.)
+.AddCookie("ExternalCookie", options =>
+{
+    options.Cookie.Name = "__Host-external_session";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.Path = "/";
 
-    options.Events.OnRedirectToAccessDenied = ctx =>
-    {
-        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return Task.CompletedTask;
-    };
+    // Más corta para cookies externas
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = true;
 });
+// Google OAuth (cuando sea implementado)
+// .AddGoogle(options =>
+// {
+//     options.ClientId = builder.Configuration["Google:ClientId"]!;
+//     options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
+//     options.SignInScheme = "ExternalCookie";
+// });
 
+// ========== Servicios Adicionales ==========
 builder.Services.AddLogging();
 
+// ========== CORS (si es necesario) ==========
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins(builder.Configuration["Cors:AllowedOrigins"] ?? "https://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();  // Importante para cookies
+    });
+});
+
+// ========== Build App ==========
 var app = builder.Build();
 
+// ========== Middleware Pipeline ==========
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Orden importante del middleware
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");  // Si se usa CORS
 app.UseRouting();
 
-app.UseHttpsRedirection();
-// app.UseAuthorization();
+// ¡IMPORTANTE! Autenticación y Autorización
+app.UseAuthentication();    // Procesar esquemas de autenticación
+app.UseAuthorization();     // Aplicar políticas de autorización
 
 app.MapControllers();
 app.Run();

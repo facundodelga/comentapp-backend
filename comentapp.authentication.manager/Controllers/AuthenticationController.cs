@@ -1,15 +1,23 @@
 ﻿using AutoMapper;
 using comentapp.authentication.businessLogic.Core;
 using comentapp.authentication.businessLogic.DTOs;
+using comentapp.authentication.businessLogic.Provider;
 using comentapp.authentication.businessLogic.Services;
+using comentapp.authentication.businessLogic.Services.Implementation;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class AuthenticationController(IMapper _mapper, IUserService _userService) : ControllerBase
+    public class AuthenticationController(
+        IMapper _mapper, 
+        IAuthProviderFactory _authProviderFactory, 
+        IUserService _userService, 
+        ITokenService _tokenService,
+        ICookieService _cookieService) : ControllerBase
     {
 
         [HttpGet]
@@ -38,23 +46,18 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
         {
             var requestDto = _mapper.Map<LoginDTO>(request);
             
-            var result = await _userService.LoginUser(requestDto);
+            var provider = _authProviderFactory.GetProvider("local");
+            var result = await provider.AuthenticateAsync(requestDto);
 
             if (!result.IsSuccess)
             {
                 return Unauthorized(new
                 {
-                    message = "Credenciales inválidas"
+                    message = result.ErrorMessage
                 });
             }
 
-            if (!result.Value.IsEmailConfirmed)
-            {
-                return Unauthorized(new
-                {
-                    message = "Correo electrónico no confirmado"
-                });
-            }
+            _cookieService.SetAuthCookies(Response, result.Value);
 
             return Ok(result);
         }
@@ -74,6 +77,42 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
                 return Conflict(new { Message = result.ErrorMessage });
 
             return StatusCode(500, result.ErrorMessage);
+        }
+
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            // El refresh token viene de la cookie — no del body
+            var refreshToken = _cookieService.GetRefreshToken(Request);
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return Unauthorized("No hay sesión activa.");
+
+            var result = await _tokenService.RefreshAsync(refreshToken);
+
+            if (!result.IsSuccess)
+            {
+                _cookieService.ClearAuthCookies(Response);
+                return Unauthorized(result.ErrorMessage);
+            }
+
+            _cookieService.SetAuthCookies(Response, result.Value);
+
+            return Ok(new { message = "Token renovado." });
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var refreshToken = _cookieService.GetRefreshToken(Request);
+
+            if (!string.IsNullOrEmpty(refreshToken))
+                await _tokenService.RevokeAsync(refreshToken);
+
+            _cookieService.ClearAuthCookies(Response);
+
+            return NoContent();
         }
     }
 }
