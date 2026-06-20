@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using comentapp.authentication.businessLogic.Core;
 using comentapp.authentication.businessLogic.DTOs;
+using comentapp.authentication.businessLogic.Services.Base;
 using comentapp.infrastructure.Service;
 using comentapp.persistence.Models;
 using comentapp.persistence.Repository;
@@ -12,20 +13,18 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
 {
     public class UserService(
         IMapper mapper,
-        ILogger<UserService> logger, 
-        IPasswordHasher<User> passwordHasher, 
+        ILogger<UserService> logger,
+        IPasswordHasher<User> passwordHasher,
         IConfiguration configuration,
         IUserRepository userRepository,
         IEmailConfirmationService emailConfirmationService,
         ISmtpEmailSender emailSender,
         IEmailTemplateRenderer templateRenderer
-        ) : IUserService
+        ) : BaseService<UserService>(mapper, logger), IUserService
     {
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IPasswordHasher<User> _passwordHasher = passwordHasher;
         private readonly IConfiguration _configuration = configuration;
-        private readonly IMapper _mapper = mapper;
-        private readonly ILogger _logger = logger;
         private readonly IEmailConfirmationService _emailConfirmationService = emailConfirmationService;
         private readonly ISmtpEmailSender _emailSender = emailSender;
         private readonly IEmailTemplateRenderer _templateRenderer = templateRenderer;
@@ -34,15 +33,15 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
         {
             var confirmEmailDTO = confirmEmail.User.Email;
 
-            _logger.LogInformation($"Intentando confirmar el email del usuario: {confirmEmailDTO}");
+            LogInformation($"Intentando confirmar el email del usuario: {confirmEmailDTO}");
             var user = await _userRepository.GetByEmailAsync(confirmEmailDTO);
 
             if (user == null)
             {
                 return Result<User>.Failure("Usuario no encontrado", (int)UserServiceErrorCodes.LU_UserNotFound);
             }
-            _logger.LogInformation("TOKEN RECIBIDO: {Token}", confirmEmail.Token);
-            _logger.LogInformation("TOKEN RECIBIDO LENGTH: {Length}", confirmEmail.Token.Length);
+            LogInformation($"TOKEN RECIBIDO: {confirmEmail.Token}");
+            LogInformation($"TOKEN RECIBIDO LENGTH: {confirmEmail.Token.Length}");
             var validationToken = _emailConfirmationService.ValidateToken(confirmEmail.Token, confirmEmailDTO);
 
             if(validationToken == null)
@@ -91,20 +90,20 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
         {
             var newUser = register.User;
 
-            _logger.LogInformation($"Intentando crear el usuario: {newUser}");
+            LogInformation($"Intentando crear el usuario: {newUser}");
 
 
             var resultEmail = await _userRepository.EmailExistsAsync(newUser.Email);
             if (resultEmail)
             {
-                _logger.LogInformation("El email ya pertenece a un usuario");
+                LogInformation("El email ya pertenece a un usuario");
                 return Result<User>.Failure("El email ya pertenece a un usuario", (int)UserServiceErrorCodes.CU_EmailAlreadyExists);
             }
 
             var resultUsername = await _userRepository.UsernameExistsAsync(newUser.UserName!);
             if (resultUsername)
             {
-                _logger.LogInformation("El nombre de usuario ya pertenece a un usuario");
+                LogInformation("El nombre de usuario ya pertenece a un usuario");
                 return Result<User>.Failure("El nombre de usuario ya pertenece a un usuario", (int)UserServiceErrorCodes.CU_UsernameAlreadyExists);
             }
             try
@@ -113,8 +112,6 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
                 var response = await _userRepository.CreateUserAsync(newUser);
 
                 var token = _emailConfirmationService.GenerateToken(newUser.Id, newUser.Email);
-                _logger.LogInformation("TOKEN GENERADO: {Token}", token);
-                _logger.LogInformation("TOKEN GENERADO LENGTH: {Length}", token.Length);
 
                 var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
 
@@ -145,10 +142,10 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Ocurrio un error al crear el usuario {message}", ex.Message);
+                LogDebug($"Ocurrio un error al crear el usuario {ex.Message}");
                 return Result<User>.Failure($"Error al crear el usuario: {ex.Message}");
             }
-
+            
         }
     }
 }
