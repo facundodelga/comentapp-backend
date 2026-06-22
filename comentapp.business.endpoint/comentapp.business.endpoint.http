@@ -1,0 +1,6 @@
+@comentapp.business.endpoint_HostAddress = http://localhost:5113
+
+GET {{comentapp.business.endpoint_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
