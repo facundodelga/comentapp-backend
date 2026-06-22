@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using comentapp.persistence;
 
@@ -11,9 +12,11 @@ using comentapp.persistence;
 namespace comentapp.persistence.Migrations
 {
     [DbContext(typeof(ComentappDbContext))]
-    partial class ComentappDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622214726_CreateCreator")]
+    partial class CreateCreator
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,49 +42,6 @@ namespace comentapp.persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DataProtectionKeys");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.Comment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CommentText")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CreatorId1")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("CreatorId1");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
-
-                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("comentapp.persistence.Models.Creator", b =>
@@ -230,33 +190,6 @@ namespace comentapp.persistence.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("comentapp.persistence.Models.Comment", b =>
-                {
-                    b.HasOne("comentapp.persistence.Models.Creator", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("comentapp.persistence.Models.Creator", null)
-                        .WithMany("Comments")
-                        .HasForeignKey("CreatorId1");
-
-                    b.HasOne("comentapp.persistence.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("comentapp.persistence.Models.User", null)
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId1");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("comentapp.persistence.Models.Creator", b =>
                 {
                     b.HasOne("comentapp.persistence.Models.User", "User")
@@ -277,16 +210,6 @@ namespace comentapp.persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.Creator", b =>
-                {
-                    b.Navigation("Comments");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.User", b =>
-                {
-                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

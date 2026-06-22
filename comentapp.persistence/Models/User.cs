@@ -11,5 +11,7 @@
         public DateTime CreatedDate { get; set; }
         public bool IsEmailConfirmed { get; set; } = false;
         public DateTime LastModifiedDate { get; set; }
+
+        public List<Comment> Comments { get; set; } = new List<Comment>();
     }
 }
