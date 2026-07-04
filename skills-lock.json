@@ -7,6 +7,12 @@
       "skillPath": ".claude/skills/backend-development/SKILL.md",
       "computedHash": "dedbc6bb7afa2c16ac6b3451a435a198af0e5d3786b30a15d40910ba207fd6e3"
     },
+    "caveman": {
+      "source": "juliusbrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman/SKILL.md",
+      "computedHash": "723fb2a8bec1156c0f0b5bf020cc739ed09702b7726ec6377480038871339f6e"
+    },
     "cleanddd-modeling": {
       "source": "netcorepal/cleanddd-skills",
       "sourceType": "github",
