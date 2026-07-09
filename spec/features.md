@@ -11,6 +11,7 @@
 | Feature | Status | Spec |
 | --- | --- | --- |
 | Authentication and session | partial | `spec/features/feature-auth.md` |
+| Auth business proxy | planned | `spec/features/feature-auth-business-proxy.md` |
 | Google authentication | partial | `spec/features/feature-google-auth.md` |
 | Creator activation/profile | planned | `spec/features/feature-creators.md` |
 | Donation comment checkout | planned | `spec/features/feature-comments-donations.md` |
