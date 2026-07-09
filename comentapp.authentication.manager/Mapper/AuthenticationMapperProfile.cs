@@ -15,8 +15,8 @@ namespace Comentapp.AuthenticationManager.Endpoint.Mapper
                 .ForPath(dest => dest.User.Surname, opt => opt.MapFrom(src => src.Surname))
                 .AfterMap((source, destination) =>
                 {
-                    destination.User.CreatedDate = DateTime.UtcNow;
-                    destination.User.LastModifiedDate = DateTime.UtcNow;
+                    destination.User.CreatedAt = DateTime.UtcNow;
+                    destination.User.UpdatedAt = DateTime.UtcNow;
 
                     destination.User.PasswordHash = source.Password!;
                 });
