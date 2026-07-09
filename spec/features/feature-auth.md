@@ -8,7 +8,7 @@ Google login is tracked separately in `spec/features/feature-google-auth.md`, bu
 
 ## Current State
 
-Status: `partial`.
+Status: `done` (local auth + session hydration). Google OAuth wiring is out of scope here; see `spec/features/feature-google-auth.md`.
 
 Implemented:
 
@@ -24,10 +24,13 @@ Implemented:
 
 Gap:
 
-- `GET /Authentication/me` does not return full user contract.
-- Creator role is not included.
-- Google OAuth flow is not wired into controller endpoints yet.
-- Some async cookie service methods use `async void`.
+- Google OAuth flow is not wired into controller endpoints yet (tracked in `spec/features/feature-google-auth.md`).
+
+Resolved:
+
+- `GET /Authentication/me` now returns the full target contract (`id`, `name`, `surname`, `userName`, `email`, `isCreator`), mapped via `Me_Res` DTO.
+- `isCreator` reflects whether the current user has an associated `Creator` profile.
+- `ICookieService.SetAuthCookies`/`ClearAuthCookies` are `async Task` (no longer `async void`).
 
 ## Target Contract
 

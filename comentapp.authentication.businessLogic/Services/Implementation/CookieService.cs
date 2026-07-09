@@ -19,18 +19,25 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
         private readonly JwtOptions _jwtOptions;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        /// <summary>
+        /// Creates a new <see cref="CookieService"/>.
+        /// </summary>
+        /// <param name="jwtOptions">JWT configuration used for token-related claims.</param>
+        /// <param name="httpContextAccessor">Accessor used to reach the current <see cref="HttpContext"/> for sign-in/sign-out operations.</param>
         public CookieService(JwtOptions jwtOptions, IHttpContextAccessor httpContextAccessor)
         {
-            _jwtOptions = jwtOptions;
-            _httpContextAccessor = httpContextAccessor;
+            _jwtOptions = jwtOptions ?? throw new ArgumentNullException(nameof(jwtOptions));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         /// <summary>
         /// Establecer cookies de autenticación usando el esquema "AppCookie".
         /// Crea un principal con los tokens y lo guarda en la cookie.
         /// </summary>
-        public async void SetAuthCookies(HttpResponse response, AuthTokens tokens)
+        public async Task SetAuthCookies(HttpResponse response, AuthTokens tokens)
         {
+            ArgumentNullException.ThrowIfNull(tokens);
+
             var httpContext = _httpContextAccessor.HttpContext 
                 ?? throw new InvalidOperationException("HttpContext no disponible");
 
@@ -68,13 +75,13 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             };
 
             // Firmar en el esquema "AppCookie"
-            httpContext.SignInAsync("AppCookie", principal, authProperties).Wait();
+            await httpContext.SignInAsync("AppCookie", principal, authProperties);
         }
 
         /// <summary>
         /// Limpiar cookies de autenticación.
         /// </summary>
-        public async void ClearAuthCookies(HttpResponse response)
+        public async Task ClearAuthCookies(HttpResponse response)
         {
             var httpContext = _httpContextAccessor.HttpContext 
                 ?? throw new InvalidOperationException("HttpContext no disponible");

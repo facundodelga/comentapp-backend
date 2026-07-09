@@ -46,6 +46,14 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = "AppCookie";
     options.DefaultSignInScheme = "AppCookie";
 })
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
+    options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
+    options.SignInScheme = "AppCookie";
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+})
 // Cookie local para autenticación propia (email/contraseña)
 .AddCookie("AppCookie", options =>
 {
@@ -111,13 +119,6 @@ builder.Services.AddAuthentication(options =>
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
 });
-// Google OAuth (cuando sea implementado)
-// .AddGoogle(options =>
-// {
-//     options.ClientId = builder.Configuration["Google:ClientId"]!;
-//     options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
-//     options.SignInScheme = "ExternalCookie";
-// });
 
 // ========== Servicios Adicionales ==========
 builder.Services.AddLogging();

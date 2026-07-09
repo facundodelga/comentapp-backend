@@ -15,13 +15,13 @@ namespace comentapp.authentication.businessLogic.Services
         /// </summary>
         /// <param name="response">HttpResponse para establecer las cookies</param>
         /// <param name="tokens">Tokens JWT y datos del usuario</param>
-        void SetAuthCookies(HttpResponse response, AuthTokens tokens);
+        Task SetAuthCookies(HttpResponse response, AuthTokens tokens);
 
         /// <summary>
         /// Limpiar todas las cookies de autenticación (logout).
         /// </summary>
         /// <param name="response">HttpResponse para limpiar las cookies</param>
-        void ClearAuthCookies(HttpResponse response);
+        Task ClearAuthCookies(HttpResponse response);
 
         /// <summary>
         /// Obtener el token de refresco desde las cookies.

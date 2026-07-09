@@ -4,10 +4,23 @@ using Comentapp.AuthenticationManager.Endpoint.DTOs;
 
 namespace Comentapp.AuthenticationManager.Endpoint.Mapper
 {
+    /// <summary>
+    /// AutoMapper profile defining the mappings between HTTP-facing DTOs
+    /// (<see cref="Comentapp.AuthenticationManager.Endpoint.DTOs"/>) and the
+    /// business-logic DTOs/entities used by the authentication services.
+    /// </summary>
     public class AuthenticationMapperProfile : AutoMapper.Profile
     {
+        /// <summary>
+        /// Registers all authentication-related mapping configurations.
+        /// </summary>
         public AuthenticationMapperProfile()
         {
+            CreateMap<User, Me_Res>()
+                .ForMember(dest => dest.IsCreator, opt => opt.MapFrom(src => src.Creator != null));
+
+            CreateMap<User, Register_Res>();
+
             CreateMap<Register_Req, RegisterDTO>()
                 .ForPath(dest => dest.User.Email, opt => opt.MapFrom(src => src.Email))
                 .ForPath(dest => dest.User.Name, opt => opt.MapFrom(src => src.Name))

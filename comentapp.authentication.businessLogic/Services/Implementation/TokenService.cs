@@ -12,19 +12,31 @@ using System.Text;
 
 namespace comentapp.authentication.businessLogic.Services.Implementation
 {
+    /// <summary>
+    /// Default <see cref="ITokenService"/> implementation: issues JWT access tokens,
+    /// generates/rotates refresh tokens, and persists refresh-token state via <see cref="IRefreshTokenRepository"/>.
+    /// </summary>
     public class TokenService : ITokenService
     {
         private readonly JwtOptions _jwtOptions;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
+        /// <summary>
+        /// Creates a new <see cref="TokenService"/>.
+        /// </summary>
+        /// <param name="jwtOptions">JWT signing/expiration configuration.</param>
+        /// <param name="refreshTokenRepository">Repository used to persist and query refresh tokens.</param>
         public TokenService(JwtOptions jwtOptions, IRefreshTokenRepository refreshTokenRepository)
         {
-            _jwtOptions = jwtOptions;
-            _refreshTokenRepository = refreshTokenRepository;
+            _jwtOptions = jwtOptions ?? throw new ArgumentNullException(nameof(jwtOptions));
+            _refreshTokenRepository = refreshTokenRepository ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
         }
 
+        /// <inheritdoc />
         public string GenerateAccessToken(User user)
         {
+            ArgumentNullException.ThrowIfNull(user);
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -47,6 +59,7 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        /// <inheritdoc />
         public RefreshToken GenerateRefreshToken(int userId) => new()
         {
             UserId = userId,
@@ -56,8 +69,11 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             IsRevoked = false
         };
 
+        /// <inheritdoc />
         public async Task<Result<AuthTokens>> RefreshAsync(string refreshToken)
         {
+            ArgumentException.ThrowIfNullOrEmpty(refreshToken);
+
             var stored = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
 
             if (stored is null)
@@ -90,21 +106,25 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             });
         }
 
+        /// <inheritdoc />
         public async Task RevokeAsync(string refreshToken)
         {
-            await _refreshTokenRepository.GetByTokenAsync(refreshToken).ContinueWith(async t =>
-            {
-                var token = t.Result;
-                if (token is not null)
-                {
-                    await _refreshTokenRepository.RevokeByIdAsync(token.Id);
-                    await _refreshTokenRepository.SaveChangesAsync();
-                }
-            });
+            ArgumentException.ThrowIfNullOrEmpty(refreshToken);
+
+            var token = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
+
+            if (token is null)
+                return;
+
+            await _refreshTokenRepository.RevokeByIdAsync(token.Id);
+            await _refreshTokenRepository.SaveChangesAsync();
         }
 
+        /// <inheritdoc />
         public async Task SaveRefreshTokenAsync(RefreshToken refreshToken)
         {
+            ArgumentNullException.ThrowIfNull(refreshToken);
+
             await _refreshTokenRepository.AddAsync(refreshToken);
             await _refreshTokenRepository.SaveChangesAsync();
         }

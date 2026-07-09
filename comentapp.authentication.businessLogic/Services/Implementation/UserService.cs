@@ -11,6 +11,10 @@ using Microsoft.Extensions.Logging;
 
 namespace comentapp.authentication.businessLogic.Services.Implementation
 {
+    /// <summary>
+    /// Default <see cref="IUserService"/> implementation backed by <see cref="IUserRepository"/>,
+    /// handling registration, login, email confirmation, and current-user hydration.
+    /// </summary>
     public class UserService(
         IMapper mapper,
         ILogger<UserService> logger,
@@ -22,15 +26,18 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
         IEmailTemplateRenderer templateRenderer
         ) : BaseService<UserService>(mapper, logger), IUserService
     {
-        private readonly IUserRepository _userRepository = userRepository;
-        private readonly IPasswordHasher<User> _passwordHasher = passwordHasher;
-        private readonly IConfiguration _configuration = configuration;
-        private readonly IEmailConfirmationService _emailConfirmationService = emailConfirmationService;
-        private readonly ISmtpEmailSender _emailSender = emailSender;
-        private readonly IEmailTemplateRenderer _templateRenderer = templateRenderer;
+        private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        private readonly IPasswordHasher<User> _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+        private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        private readonly IEmailConfirmationService _emailConfirmationService = emailConfirmationService ?? throw new ArgumentNullException(nameof(emailConfirmationService));
+        private readonly ISmtpEmailSender _emailSender = emailSender ?? throw new ArgumentNullException(nameof(emailSender));
+        private readonly IEmailTemplateRenderer _templateRenderer = templateRenderer ?? throw new ArgumentNullException(nameof(templateRenderer));
 
+        /// <inheritdoc />
         public async Task<Result<User>> ConfirmEmailAsync(ConfirmMailDTO confirmEmail)
         {
+            ArgumentNullException.ThrowIfNull(confirmEmail);
+
             var confirmEmailDTO = confirmEmail.User.Email;
 
             LogInformation($"Intentando confirmar el email del usuario: {confirmEmailDTO}");
@@ -65,8 +72,11 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             return Result<User>.Success(user);
         }
 
+        /// <inheritdoc />
         public async Task<Result<User>> LoginUser(LoginDTO login)
         {
+            ArgumentNullException.ThrowIfNull(login);
+
             var loginUser = login.User;
             var user = await _userRepository.GetByEmailAsync(loginUser.Email);
 
@@ -95,8 +105,11 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
             return Result<User>.Success(user);
         }
 
+        /// <inheritdoc />
         public async Task<Result<User>> RegisterUser(RegisterDTO register)
         {
+            ArgumentNullException.ThrowIfNull(register);
+
             var newUser = register.User;
 
             LogInformation($"Intentando crear el usuario: {newUser}");
@@ -155,6 +168,20 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
                 return Result<User>.Failure($"Error al crear el usuario: {ex.Message}");
             }
             
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<User>> GetCurrentUserAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdWithCreatorAsync(userId);
+
+            if (user == null)
+            {
+                LogInformation($"No se encontró el usuario con id: {userId}");
+                return Result<User>.Failure("Usuario no encontrado", (int)UserServiceErrorCodes.LU_UserNotFound);
+            }
+
+            return Result<User>.Success(user);
         }
     }
 }

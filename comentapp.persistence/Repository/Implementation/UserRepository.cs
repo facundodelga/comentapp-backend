@@ -20,6 +20,13 @@ namespace comentapp.persistence.Repository.Implementation
             return await _context.Users.FirstOrDefaultAsync(user => user.UserName == username);
         }
 
+        public async Task<User?> GetByIdWithCreatorAsync(int id)
+        {
+            return await _context.Users
+                .Include(user => user.Creator)
+                .FirstOrDefaultAsync(user => user.Id == id);
+        }
+
         public async Task<bool> EmailExistsAsync(string email)
         {
             return await _context.Users.AnyAsync(user => user.Email == email);

@@ -9,9 +9,16 @@ using Microsoft.Extensions.Configuration;
 
 namespace comentapp.authentication.businessLogic
 {
+    /// <summary>
+    /// Autofac module registering all authentication business-logic services:
+    /// password hashing, auth providers (local/Google), token/cookie/user services,
+    /// and the shared database/email/JWT infrastructure modules.
+    /// </summary>
     public class AuthenticationBusinessModule(IConfiguration configuration) : Module
     {
-        private readonly IConfiguration _configuration = configuration;
+        private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+        /// <inheritdoc />
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<PasswordHasher<User>>()
