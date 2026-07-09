@@ -15,97 +15,65 @@ namespace comentapp.persistence
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Setting> Settings { get; set; }
+        public DbSet<Creator> Creators { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+
+
         //public DbSet<Models.UserCredentials> UserCredentials { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
             modelBuilder.Entity<Creator>(entity =>
             {
-                entity.ToTable("Creators");
-
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Id)
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(c => c.CreatorName)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(c => c.UserId)
-                    .IsRequired();
-
-                entity.Property(c => c.MercadoPagoAccount)
-                    .IsRequired()
-                    .HasMaxLength(150);
-
-                entity.Property(c => c.InstagramLink)
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.TikTokLink)
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.YouTubeLink)
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.TwitchLink)
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.KickLink)
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.Description)
-                    .HasMaxLength(1000);
-
                 entity.HasOne(c => c.User)
-                    .WithOne()
+                    .WithOne(u => u.Creator)
                     .HasForeignKey<Creator>(c => c.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(c => c.UserId)
-                    .IsUnique();
-
-                entity.HasIndex(c => c.CreatorName)
-                    .IsUnique();
             });
 
+            // Relación Comment -> User
             modelBuilder.Entity<Comment>(entity =>
             {
-                entity.ToTable("Comments");
-
-                entity.HasKey(c => c.Id);
-
-                entity.Property(c => c.Id)
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(c => c.CommentText)
-                    .IsRequired()
-                    .HasMaxLength(300);
-
-                entity.Property(c => c.CreatedAt)
-                    .IsRequired()
-                    .HasDefaultValueSql("GETUTCDATE()");
-
-                entity.Property(c => c.UserId)
-                    .IsRequired();
-
-                entity.Property(c => c.CreatorId)
-                    .IsRequired();
-
                 entity.HasOne(c => c.User)
-                    .WithMany()
+                    .WithMany(u => u.Comments)
                     .HasForeignKey(c => c.UserId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
 
+            // Relación Comment -> Creator
+            modelBuilder.Entity<Comment>(entity =>
+            {
                 entity.HasOne(c => c.Creator)
-                    .WithMany()
+                    .WithMany(cr => cr.Comments)
                     .HasForeignKey(c => c.CreatorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Relación Payment -> User
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasOne(p => p.User)
+                    .WithMany(u => u.Payments)
+                    .HasForeignKey(p => p.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Relación Payment -> Creator
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasOne(p => p.Creator)
+                    .WithMany(cr => cr.Payments)
+                    .HasForeignKey(p => p.CreatorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Relación Payment -> Comentario (1:1, solo desde Payment)
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.HasOne(p => p.Comment)
+                    .WithOne()  // ✅ Sin WithOne(c => c.Pago)
+                    .HasForeignKey<Comment>(c => c.PaymentId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasIndex(c => c.UserId);
-
-                entity.HasIndex(c => c.CreatorId);
             });
         }
     }

@@ -24,7 +24,7 @@ namespace comentapp.business.endpoint.Controllers
             return Ok(new
             {
                 message = "Comentario recibido correctamente.",
-                comment = request.Comment
+                comment = request.CommentText,
             });
         }
     }

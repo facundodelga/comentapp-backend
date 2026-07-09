@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using comentapp.persistence;
 
@@ -11,9 +12,11 @@ using comentapp.persistence;
 namespace comentapp.persistence.Migrations
 {
     [DbContext(typeof(ComentappDbContext))]
-    partial class ComentappDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260709193602_FixComments")]
+    partial class FixComments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,18 +63,12 @@ namespace comentapp.persistence.Migrations
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PaymentId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatorId");
-
-                    b.HasIndex("PaymentId")
-                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -128,78 +125,6 @@ namespace comentapp.persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Creators");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.Payment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("CommentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MercadoPagoId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Method")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PayedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PaymentStatusId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PreferenceId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("PaymentStatusId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Payment");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.PaymentStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PaymentStatus");
                 });
 
             modelBuilder.Entity("comentapp.persistence.Models.RefreshToken", b =>
@@ -300,12 +225,6 @@ namespace comentapp.persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("comentapp.persistence.Models.Payment", null)
-                        .WithOne("Comment")
-                        .HasForeignKey("comentapp.persistence.Models.Comment", "PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("comentapp.persistence.Models.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
@@ -328,33 +247,6 @@ namespace comentapp.persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("comentapp.persistence.Models.Payment", b =>
-                {
-                    b.HasOne("comentapp.persistence.Models.Creator", "Creator")
-                        .WithMany("Payments")
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("comentapp.persistence.Models.PaymentStatus", "PaymentStatus")
-                        .WithMany()
-                        .HasForeignKey("PaymentStatusId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("comentapp.persistence.Models.User", "User")
-                        .WithMany("Payments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("PaymentStatus");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("comentapp.persistence.Models.RefreshToken", b =>
                 {
                     b.HasOne("comentapp.persistence.Models.User", "User")
@@ -369,14 +261,6 @@ namespace comentapp.persistence.Migrations
             modelBuilder.Entity("comentapp.persistence.Models.Creator", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Payments");
-                });
-
-            modelBuilder.Entity("comentapp.persistence.Models.Payment", b =>
-                {
-                    b.Navigation("Comment")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("comentapp.persistence.Models.User", b =>
@@ -384,8 +268,6 @@ namespace comentapp.persistence.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Creator");
-
-                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }
