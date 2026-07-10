@@ -3,7 +3,10 @@ using comentapp.authentication.businessLogic.Core;
 using comentapp.authentication.businessLogic.DTOs;
 using comentapp.authentication.businessLogic.Provider;
 using comentapp.authentication.businessLogic.Services;
+using comentapp.persistence.Models;
 using Comentapp.AuthenticationManager.Endpoint.DTOs;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,7 +15,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
 {
     /// <summary>
     /// Exposes the authentication and session endpoints: registration, email confirmation,
-    /// local login, token refresh, logout, and current-user ("me") hydration.
+    /// local login, Google login, token refresh, logout, and current-user ("me") hydration.
     /// </summary>
     [Route("[controller]")]
     [ApiController]
@@ -21,7 +24,8 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
         IAuthProviderFactory _authProviderFactory, 
         IUserService _userService, 
         ITokenService _tokenService,
-        ICookieService _cookieService) : ControllerBase
+        ICookieService _cookieService,
+        IConfiguration _configuration) : ControllerBase
     {
         /// <summary>
         /// Lightweight health-check for the authenticated identity pipeline.
@@ -173,6 +177,107 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
                 return NotFound(result.ErrorMessage);
 
             return Ok(_mapper.Map<Me_Res>(result.Value));
+        }
+
+        /// <summary>
+        /// Starts the Google OAuth challenge. The browser is redirected to Google's consent
+        /// screen; on completion Google redirects back to <see cref="GoogleCallback"/>.
+        /// </summary>
+        /// <param name="returnUrl">Optional frontend-relative path to return to after login completes.</param>
+        /// <returns>A challenge result that redirects the browser to Google.</returns>
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin([FromQuery] string? returnUrl = null)
+        {
+            var callbackUrl = Url.Action(nameof(GoogleCallback), values: new { returnUrl });
+
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = callbackUrl
+            };
+
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        /// <summary>
+        /// Handles the Google OAuth callback: reads the external principal from the
+        /// <c>ExternalCookie</c> scheme, finds or creates the local user by verified email,
+        /// issues the same app session cookies as local login, clears the external cookie,
+        /// and redirects to an allowed frontend return URL.
+        /// </summary>
+        /// <param name="returnUrl">Optional frontend-relative path to return to after login completes.</param>
+        /// <returns>A redirect to the frontend, on success or failure.</returns>
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback([FromQuery] string? returnUrl = null)
+        {
+            var externalResult = await HttpContext.AuthenticateAsync("ExternalCookie");
+
+            if (!externalResult.Succeeded || externalResult.Principal is null)
+            {
+                await HttpContext.SignOutAsync("ExternalCookie");
+                return Redirect(BuildFrontendRedirectUri(returnUrl, success: false));
+            }
+
+            var principal = externalResult.Principal;
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                await HttpContext.SignOutAsync("ExternalCookie");
+                return Redirect(BuildFrontendRedirectUri(returnUrl, success: false));
+            }
+
+            var name = principal.FindFirst(ClaimTypes.GivenName)?.Value;
+            var surname = principal.FindFirst(ClaimTypes.Surname)?.Value;
+            var givenName = principal.FindFirst(ClaimTypes.GivenName)?.Value;
+
+            var googleLogin = new LoginDTO
+            {
+                User = new User
+                {
+                    Email = email,
+                    Name = name ?? string.Empty,
+                    Surname = surname ?? string.Empty,
+                    UserName = givenName
+                }
+            };
+
+            var provider = _authProviderFactory.GetProvider("google");
+            var result = await provider.AuthenticateAsync(googleLogin);
+
+            // La cookie externa ya cumplió su propósito: se descarta siempre,
+            // tanto en éxito como en falla.
+            await HttpContext.SignOutAsync("ExternalCookie");
+
+            if (!result.IsSuccess)
+                return Redirect(BuildFrontendRedirectUri(returnUrl, success: false));
+
+            await _cookieService.SetAuthCookies(Response, result.Value);
+
+            return Redirect(BuildFrontendRedirectUri(returnUrl, success: true));
+        }
+
+        /// <summary>
+        /// Builds a safe redirect URI back to the frontend after the Google OAuth flow.
+        /// Only relative paths are accepted for <paramref name="returnUrl"/> to prevent
+        /// open-redirect attacks; anything else falls back to the frontend root.
+        /// </summary>
+        private string BuildFrontendRedirectUri(string? returnUrl, bool success)
+        {
+            var baseUrl = (_configuration["Frontend:BaseUrl"] ?? "http://localhost:5173").TrimEnd('/');
+
+            var path = "/";
+            if (!string.IsNullOrWhiteSpace(returnUrl)
+                && returnUrl.StartsWith('/')
+                && !returnUrl.StartsWith("//")
+                && !returnUrl.Contains("://"))
+            {
+                path = returnUrl;
+            }
+
+            var separator = path.Contains('?') ? "&" : "?";
+            var status = success ? "success" : "error";
+
+            return $"{baseUrl}{path}{separator}googleAuth={status}";
         }
     }
 }

@@ -183,5 +183,53 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
 
             return Result<User>.Success(user);
         }
+
+        /// <inheritdoc />
+        public async Task<Result<User>> FindOrCreateGoogleUserAsync(string email, string? name, string? surname, string? username)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(email);
+
+            var existingUser = await _userRepository.GetByEmailAsync(email);
+
+            if (existingUser != null)
+            {
+                // El email ya viene verificado por Google: si el usuario local todavía
+                // no había confirmado su email, lo damos por confirmado para no bloquear
+                // el login (regla: un mismo email nunca crea un segundo usuario).
+                if (!existingUser.IsEmailConfirmed)
+                {
+                    existingUser.IsEmailConfirmed = true;
+                    await _userRepository.UpdateUserAsync(existingUser);
+                    await _userRepository.SaveChangesAsync();
+
+                    LogInformation($"Email confirmado automáticamente vía Google: {email}");
+                }
+
+                return Result<User>.Success(existingUser);
+            }
+
+            var newUser = new User
+            {
+                Email = email,
+                Name = string.IsNullOrWhiteSpace(name) ? email : name,
+                Surname = surname ?? string.Empty,
+                UserName = null,
+                IsEmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+            };
+
+            // Las cuentas creadas por Google no requieren password propio: se guarda un
+            // hash inutilizable (contraseña aleatoria) para que el login local nunca
+            // pueda tener éxito con este usuario.
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, Guid.NewGuid().ToString("N"));
+
+            var created = await _userRepository.CreateUserAsync(newUser);
+            await _userRepository.SaveChangesAsync();
+
+            LogInformation($"Usuario creado desde Google: {email}");
+
+            return Result<User>.Success(created);
+        }
     }
 }

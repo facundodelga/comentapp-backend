@@ -44,5 +44,21 @@ namespace comentapp.authentication.businessLogic.Services
         /// <param name="userId">The id of the authenticated user, typically resolved from <see cref="System.Security.Claims.ClaimTypes.NameIdentifier"/>.</param>
         /// <returns>A successful <see cref="Result{T}"/> containing the <see cref="User"/> with <see cref="User.Creator"/> loaded, or a failure result if the user no longer exists.</returns>
         Task<Result<User>> GetCurrentUserAsync(int userId);
+
+        /// <summary>
+        /// Finds the user matching a verified Google email, or creates a new user from the
+        /// Google profile claims when no account exists yet. Email is the account key: the
+        /// same email never results in two different users, whether they registered locally
+        /// or through Google.
+        /// </summary>
+        /// <param name="email">The verified email address returned by Google.</param>
+        /// <param name="name">The given name from the Google profile, used only when creating a new user.</param>
+        /// <param name="surname">The family name from the Google profile, used only when creating a new user.</param>
+        /// <returns>
+        /// A successful <see cref="Result{T}"/> containing the existing or newly created <see cref="User"/>.
+        /// Newly created users are marked with <see cref="User.IsEmailConfirmed"/> = <c>true</c> and do not
+        /// receive a usable password (Google is their only sign-in method).
+        /// </returns>
+        Task<Result<User>> FindOrCreateGoogleUserAsync(string email, string? name, string? surname, string? username);
     }
 }

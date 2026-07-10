@@ -10,9 +10,9 @@
 
 | Feature | Status | Spec |
 | --- | --- | --- |
-| Authentication and session | partial | `spec/features/feature-auth.md` |
+| Authentication and session | done | `spec/features/feature-auth.md` |
 | Auth business proxy | planned | `spec/features/feature-auth-business-proxy.md` |
-| Google authentication | partial | `spec/features/feature-google-auth.md` |
+| Google authentication | done | `spec/features/feature-google-auth.md` |
 | Creator activation/profile | planned | `spec/features/feature-creators.md` |
 | Donation comment checkout | planned | `spec/features/feature-comments-donations.md` |
 | Mercado Pago connect | planned | `spec/features/feature-mercadopago-connect.md` |
@@ -24,7 +24,7 @@
 - Registration exists with duplicate email/username checks, password hashing, and confirmation email.
 - Email confirmation exists.
 - Login/logout/refresh exist with HTTP-only cookies and refresh token rotation.
-- Google OAuth has package/template/provider scaffolding, but no working endpoints yet.
+- Google OAuth is fully wired (`google-login`/`google-callback`), issuing the same app session as local login; only needs real `Google:ClientId`/`Google:ClientSecret` to run against Google.
 - `GET /Authentication/me` exists but returns only `name` and `email`.
 - `Creator` EF model and migration exist, but no creator API exists.
 - `Comment` EF model and migration exist, but `POST /Comments` only echoes request data.
@@ -34,14 +34,13 @@
 ## Recommended Delivery Order
 
 1. Align `GET /Authentication/me` contract and frontend user shape.
-2. Complete Google OAuth if social login is part of current auth milestone.
-3. Add creator API and `isCreator` calculation.
-4. Implement creator settings/onboarding flow.
-5. Implement Mercado Pago connect.
-6. Implement donation comment preference creation.
-7. Implement Mercado Pago webhook/callback verification.
-8. Persist and expose confirmed comments.
-9. Add creator realtime dashboard with SignalR.
+2. Add creator API and `isCreator` calculation.
+3. Implement creator settings/onboarding flow.
+4. Implement Mercado Pago connect.
+5. Implement donation comment preference creation.
+6. Implement Mercado Pago webhook/callback verification.
+7. Persist and expose confirmed comments.
+8. Add creator realtime dashboard with SignalR.
 
 ## Cross-Feature Decisions Needed
 

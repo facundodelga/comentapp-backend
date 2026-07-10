@@ -6,26 +6,24 @@ Users can authenticate to ComentApp with Google, then receive the same HTTP-only
 
 ## Current State
 
-Status: `partial`.
+Status: `done` (end-to-end flow implemented; requires real `Google:ClientId`/`Google:ClientSecret` to run against Google).
 
-Implemented foundation:
+Implemented:
 
-- `Microsoft.AspNetCore.Authentication.Google` package is referenced by auth endpoint project.
-- `ExternalCookie` scheme is configured for OAuth handoff.
-- `GoogleAuthProvider` type exists.
-- `LoginDTO` and `AuthTokens` include provider-oriented fields.
-- `CookieService` stores `auth_provider` claim and clears external cookie.
-- `comentapp.authentication.manager/Security/GOOGLE_OAUTH_TEMPLATE.cs` documents intended setup.
+- `Microsoft.AspNetCore.Authentication.Google` package referenced by auth endpoint project.
+- Active `.AddGoogle(...)` registration in `Program.cs`, with `SignInScheme = "ExternalCookie"` (external principal is held temporarily in `ExternalCookie`, never signed directly into `AppCookie`).
+- `GET /Authentication/google-login` starts the Google challenge with `RedirectUri` pointing to `/Authentication/google-callback`.
+- Google redirects to `/signin-google`; the OAuth middleware exchanges the code, signs the external principal into `ExternalCookie`, then redirects to `/Authentication/google-callback`.
+- `GET /Authentication/google-callback` reads the external principal, delegates to `GoogleAuthProvider` (via `IAuthProviderFactory.GetProvider("google")`), sets the app session cookies through `ICookieService.SetAuthCookies`, clears `ExternalCookie`, and redirects to a validated frontend return URL.
+- `GoogleAuthProvider` (implements `IAuthProvider`) calls `IUserService.FindOrCreateGoogleUserAsync` and issues the same `AuthTokens` shape as `LocalAuthProvider`, tagged with `AuthProvider = "google"`.
+- `IUserService.FindOrCreateGoogleUserAsync`: looks up the user by email; if found, marks `IsEmailConfirmed = true` when it wasn't already (Google's email is trusted as verified); if not found, creates a new `User` with `IsEmailConfirmed = true`, no `UserName`, and an unusable random password hash (Google is the only sign-in method for these accounts).
+- `returnUrl` is validated to be a relative path (must start with `/`, reject `//` and absolute URLs) before being appended to `Frontend:BaseUrl`; anything else falls back to `/`.
+- `Google:ClientId`/`Google:ClientSecret` read from configuration (empty by default in `appsettings.json`; must be supplied via user secrets/environment variables for real environments).
 
-Missing:
+Remaining before production use:
 
-- Active `.AddGoogle(...)` registration in `Program.cs`.
-- `Google:ClientId` and `Google:ClientSecret` configuration through secrets/env vars.
-- Controller endpoint to start Google challenge.
-- Controller callback endpoint.
-- User lookup/create/link flow from Google identity.
-- Refresh token creation with `AuthProvider = "google"`.
-- Frontend button and callback handling.
+- Populate real `Google:ClientId`/`Google:ClientSecret` via user secrets or environment variables (not committed).
+- Register `https://<auth-host>/signin-google` as the authorized redirect URI in Google Cloud Console (middleware `CallbackPath`; not `/Authentication/google-callback`).
 
 ## Proposed Endpoints
 
@@ -40,8 +38,10 @@ Query:
 Behavior:
 
 - Builds authentication properties.
-- Sets callback to `/Authentication/google-callback`.
+- Sets `RedirectUri` to `/Authentication/google-callback` (with optional `returnUrl` query param) so the OAuth middleware redirects there after processing Google's response at `/signin-google`.
 - Uses Google challenge scheme.
+
+Google Cloud Console must register `https://<auth-host>/signin-google` as the authorized redirect URI (middleware `CallbackPath`, not the controller route).
 
 ### GET /Authentication/google-callback
 

@@ -50,7 +50,21 @@ builder.Services.AddAuthentication(options =>
 {
     options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
     options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
-    options.SignInScheme = "AppCookie";
+
+    // La cookie externa guarda temporalmente el resultado de Google mientras
+    // el callback de AuthenticationController hace el lookup/create del usuario
+    // y emite la sesión propia (AppCookie) a través de ICookieService.
+    options.SignInScheme = "ExternalCookie";
+
+    // IMPORTANTE: CallbackPath es la ruta que registra el MIDDLEWARE de autenticación
+    // de Google (RemoteAuthenticationHandler). Cualquier request a esta ruta es
+    // interceptado por el middleware ANTES de llegar al routing/MVC, y nunca
+    // ejecuta código de controller. Por eso debe ser DISTINTA de
+    // "/Authentication/google-callback" (nuestra acción de controller), o esa
+    // acción jamás se invoca. Se deja el valor por defecto de la librería
+    // ("/signin-google"); este es el que hay que registrar como "Authorized
+    // redirect URI" en Google Cloud Console: https://<host>/signin-google
+    // options.CallbackPath = "/signin-google"; // (valor por defecto, no hace falta setearlo)
     options.Scope.Add("profile");
     options.Scope.Add("email");
 })

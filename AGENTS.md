@@ -78,7 +78,6 @@ If docs and code disagree, treat code as current state and specs as intended dir
 ## Known Gaps
 
 - `GET /Authentication/me` returns only `name` and `email`.
-- Google OAuth is partially scaffolded but not implemented end to end.
 - `Creator` and `Comment` are mapped, but public `DbSet<Creator>` and `DbSet<Comment>` are missing.
 - `CommentsController.POST` only echoes the comment.
 - Business endpoint authentication setup is incomplete/commented.

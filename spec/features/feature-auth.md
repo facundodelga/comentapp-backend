@@ -8,7 +8,7 @@ Google login is tracked separately in `spec/features/feature-google-auth.md`, bu
 
 ## Current State
 
-Status: `done` (local auth + session hydration). Google OAuth wiring is out of scope here; see `spec/features/feature-google-auth.md`.
+Status: `done` (local auth + session hydration + Google OAuth wiring). See `spec/features/feature-google-auth.md` for the Google-specific flow details.
 
 Implemented:
 
@@ -22,9 +22,8 @@ Implemented:
 - External cookie scaffold for OAuth handoff
 - Email confirmation through SMTP template
 
-Gap:
-
-- Google OAuth flow is not wired into controller endpoints yet (tracked in `spec/features/feature-google-auth.md`).
+- `GET /Authentication/google-login`
+- `GET /Authentication/google-callback`
 
 Resolved:
 
