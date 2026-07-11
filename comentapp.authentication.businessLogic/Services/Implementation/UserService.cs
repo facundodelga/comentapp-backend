@@ -208,12 +208,16 @@ namespace comentapp.authentication.businessLogic.Services.Implementation
                 return Result<User>.Success(existingUser);
             }
 
+            var userNameBase = string.IsNullOrWhiteSpace(username) ? name : username;
+            userNameBase = string.IsNullOrWhiteSpace(userNameBase) ? email : userNameBase;
+            var generatedUserName = $"{userNameBase}{Random.Shared.Next(1, 10000):D4}";
+
             var newUser = new User
             {
                 Email = email,
                 Name = string.IsNullOrWhiteSpace(name) ? email : name,
                 Surname = surname ?? string.Empty,
-                UserName = null,
+                UserName = generatedUserName,
                 IsEmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,

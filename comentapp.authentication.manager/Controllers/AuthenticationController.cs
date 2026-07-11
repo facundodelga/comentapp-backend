@@ -228,7 +228,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
 
             var name = principal.FindFirst(ClaimTypes.GivenName)?.Value;
             var surname = principal.FindFirst(ClaimTypes.Surname)?.Value;
-            var givenName = principal.FindFirst(ClaimTypes.GivenName)?.Value;
+            var fullName = principal.FindFirst(ClaimTypes.Name)?.Value;
 
             var googleLogin = new LoginDTO
             {
@@ -237,7 +237,7 @@ namespace Comentapp.AuthenticationManager.Endpoint.Controllers
                     Email = email,
                     Name = name ?? string.Empty,
                     Surname = surname ?? string.Empty,
-                    UserName = givenName
+                    UserName = fullName
                 }
             };
 
