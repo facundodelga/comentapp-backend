@@ -10,7 +10,6 @@ namespace comentapp.persistence.Models
         [StringLength(50)]
         public string CreatorName { get; set; } = string.Empty;
         public int UserId { get; set; }
-        public string MercadoPagoAccount { get; set; } = string.Empty;
         [StringLength(300)]
         public string? InstagramLink { get; set; }
         [StringLength(300)]
@@ -23,6 +22,7 @@ namespace comentapp.persistence.Models
         public string? KickLink { get; set; }
         [StringLength(1000)]
         public string? Description { get; set; }
+        public CreatorMercadoPagoAccount? MercadoPagoAccount { get; set; }
 
 
         public User User { get; set; } = null!;

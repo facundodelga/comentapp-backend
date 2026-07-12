@@ -6,21 +6,23 @@ An authenticated user selects one creator, enters a short comment and amount, an
 
 ## Current State
 
-Status: `planned`.
+Status: `implemented` (backend, not yet exercised end-to-end — needs a connected MP creator + credentials).
 
-Implemented foundation:
+Implemented in `comentapp.business.endpoint`:
 
-- `Comment` EF model.
-- `CreateComments` migration.
-- `CommentsController.POST` accepts a request and echoes it.
+- `POST /DonationComments` (auth-enforced) via `DonationCheckoutService`.
+- Creates `Payment` (Pending) + `Comment` (unconfirmed), links them, then a Checkout Pro preference with marketplace split.
+- Fee: `MercadoPago:MarketplaceFeePercent` (default 3%). TODO: move to `Setting`.
+- Blocks creators without an active MP connection (422).
+- Uses the creator's OAuth token (auto-refreshes if expired) via `IMercadoPagoPreferenceService`.
+- `external_reference` = `Payment.Id` for webhook reconciliation.
 
-Missing:
+Note: the old `CommentsController.POST` echo stub still exists and is unrelated.
 
-- Real persistence.
-- Payment/preference model.
-- Creator lookup.
-- Mercado Pago client.
-- Auth enforcement in business endpoint.
+Still missing:
+
+- Webhook confirmation (`feature-mercadopago-callbacks`) — comment stays unconfirmed until then.
+- No test project.
 
 ## Proposed Endpoint
 

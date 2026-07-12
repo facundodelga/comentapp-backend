@@ -27,7 +27,10 @@ builder.Host.ConfigureContainer<ContainerBuilder>((context, containerBuilder) =>
 });
 
 // ========== Data Protection ==========
+// ApplicationName compartido con comentapp.business.endpoint para que ambas APIs
+// puedan desencriptar la misma cookie de sesión (__Host-app_session).
 builder.Services.AddDataProtection()
+    .SetApplicationName("ComentApp")
     .PersistKeysToDbContext<ComentappDbContext>();
 
 // ========== AutoMapper ==========

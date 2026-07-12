@@ -6,19 +6,25 @@ A creator connects a Mercado Pago account so they can receive paid comments.
 
 ## Current State
 
-Status: `planned`.
+Status: `implemented` (backend, not yet exercised end-to-end — needs MP app credentials + a connected test account).
 
-No Mercado Pago OAuth/connect flow exists yet.
+Implemented in `comentapp.business.endpoint`:
+
+- `MercadoPagoConnectController` (route base `/MercadoPago`) with `connect`, `callback`, `status`, `DELETE connection`.
+- `MercadoPagoConnectService` orchestration; `state` anti-CSRF persisted in `MercadoPagoOAuthState` (carries `CreatorId`, since the Strict session cookie does not survive MP's cross-site callback).
+- `IMercadoPagoOAuthService` (infrastructure) exchanges/refreshes tokens via raw HTTP `/oauth/token` (SDK 3.3.0 has no OAuth client).
+- Tokens encrypted at rest via `ITokenProtector` (DataProtection). Both APIs share `SetApplicationName("ComentApp")`.
+- Requires an existing `Creator` (step 2 / `POST /Creators`) before connect can start.
 
 ## Proposed Endpoints
 
-### GET /MercadoPago/connect
+### GET /MercadoPago/connect  ✅
 
-Requires creator auth. Starts Mercado Pago OAuth/connect flow and returns or redirects to provider authorization URL.
+Requires creator auth. Returns `{ authorizationUrl }`. (Does not redirect server-side; frontend redirects the user.) Fails if the user is not yet a creator (step 2).
 
-### GET /MercadoPago/callback
+### GET /MercadoPago/callback  ✅
 
-Handles provider callback. Exchanges authorization code for account/token data and stores required account reference securely.
+Handles provider callback. Validates `state`, exchanges `code`, stores encrypted tokens, then redirects to `Frontend.BaseUrl/creator/mercadopago?connect=success|error`.
 
 ### GET /MercadoPago/status
 

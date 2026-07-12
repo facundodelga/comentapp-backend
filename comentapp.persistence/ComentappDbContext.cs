@@ -17,6 +17,10 @@ namespace comentapp.persistence
         public DbSet<Setting> Settings { get; set; }
         public DbSet<Creator> Creators { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<PaymentStatus> PaymentStatuses { get; set; }
+        public DbSet<CreatorMercadoPagoAccount> CreatorMercadoPagoAccounts { get; set; }
+        public DbSet<MercadoPagoOAuthState> MercadoPagoOAuthStates { get; set; }
 
 
         //public DbSet<Models.UserCredentials> UserCredentials { get; set; }
@@ -73,6 +77,29 @@ namespace comentapp.persistence
                 entity.HasOne(p => p.Comment)
                     .WithOne()  // ✅ Sin WithOne(c => c.Pago)
                     .HasForeignKey<Comment>(c => c.PaymentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Relación Creator -> CreatorMercadoPagoAccount (1:1)
+            modelBuilder.Entity<CreatorMercadoPagoAccount>(entity =>
+            {
+                entity.HasOne(a => a.Creator)
+                    .WithOne(c => c.MercadoPagoAccount)
+                    .HasForeignKey<CreatorMercadoPagoAccount>(a => a.CreatorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(a => a.CreatorId).IsUnique();
+                entity.HasIndex(a => a.MpUserId).IsUnique();
+            });
+
+            // Estado anti-CSRF del connect OAuth de Mercado Pago
+            modelBuilder.Entity<MercadoPagoOAuthState>(entity =>
+            {
+                entity.HasIndex(s => s.State).IsUnique();
+
+                entity.HasOne(s => s.Creator)
+                    .WithMany()
+                    .HasForeignKey(s => s.CreatorId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }

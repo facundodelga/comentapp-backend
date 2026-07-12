@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\comentapp.persistence\comentapp.persistence.csproj" />
+    <ProjectReference Include="..\comentapp.infrastructure\comentapp.infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

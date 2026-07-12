@@ -1,7 +1,10 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using comentapp.business.endpoint.Services;
+using comentapp.infrastructure.Modules;
 using comentapp.persistence;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +22,29 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>((context, containerBuilder) =>
 {
     containerBuilder.RegisterModule(new DatabaseModule(context.Configuration));
+    containerBuilder.RegisterModule(new MercadoPagoModule(context.Configuration));
     //containerBuilder.RegisterModule(new AuthenticationBusinessModule(context.Configuration));
+
+    containerBuilder.RegisterType<MercadoPagoConnectService>()
+        .As<IMercadoPagoConnectService>()
+        .InstancePerLifetimeScope();
+
+    containerBuilder.RegisterType<CreatorService>()
+        .As<ICreatorService>()
+        .InstancePerLifetimeScope();
+
+    containerBuilder.RegisterType<DonationCheckoutService>()
+        .As<IDonationCheckoutService>()
+        .InstancePerLifetimeScope();
 });
+
+// ========== Data Protection ==========
+// MISMO ApplicationName que comentapp.authentication.manager para poder desencriptar
+// la cookie de sesión (__Host-app_session) emitida por esa API. Las claves se comparten
+// vía DB (PersistKeysToDbContext).
+builder.Services.AddDataProtection()
+    .SetApplicationName("ComentApp")
+    .PersistKeysToDbContext<ComentappDbContext>();
 
 
 builder.Services.AddAutoMapper(cfg =>
@@ -28,16 +52,15 @@ builder.Services.AddAutoMapper(cfg =>
     //cfg.AddProfile<AuthenticationMapperProfile>();
 });
 
-// ========== Autenticación Multi-Esquema ==========
-/*
+// ========== Autenticación ==========
+// Valida la cookie de sesión (__Host-app_session) emitida por comentapp.authentication.manager.
+// Comparte DataProtection (mismo ApplicationName + claves en DB) para poder desencriptarla.
+// No re-emite sesiones ni corre AppCookieEvents: esta API solo consume la sesión existente.
 builder.Services.AddAuthentication(options =>
 {
-    // Esquema por defecto para cookies
     options.DefaultScheme = "AppCookie";
     options.DefaultChallengeScheme = "AppCookie";
-    options.DefaultSignInScheme = "AppCookie";
 })
-// Cookie local para autenticación propia (email/contraseña)
 .AddCookie("AppCookie", options =>
 {
     options.Cookie.Name = "__Host-app_session";
@@ -47,69 +70,25 @@ builder.Services.AddAuthentication(options =>
     options.Cookie.Path = "/";
 
     options.SlidingExpiration = true;
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);  // 8 horas con deslizamiento
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
 
-    options.EventsType = typeof(AppCookieEvents);
-
-    // Manejo de redirecciones personalizadas
+    // APIs: 401/403 en lugar de redirigir al login.
     options.Events = new CookieAuthenticationEvents
     {
         OnRedirectToLogin = ctx =>
         {
-            // Para APIs, retornar 401 en lugar de redirigir
-            if (ctx.Request.Path.StartsWithSegments("/me") ||
-                ctx.Request.Path.StartsWithSegments("/session"))
-            {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                return Task.CompletedTask;
-            }
-
-            ctx.Response.Redirect(ctx.RedirectUri);
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return Task.CompletedTask;
         },
         OnRedirectToAccessDenied = ctx =>
         {
-            // Para APIs, retornar 403
-            if (ctx.Request.Path.StartsWithSegments("/me") ||
-                ctx.Request.Path.StartsWithSegments("/session"))
-            {
-                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-                return Task.CompletedTask;
-            }
-
-            ctx.Response.Redirect(ctx.RedirectUri);
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
-        },
-        OnValidatePrincipal = ctx =>
-        {
-            // Llamar al validador personalizado
-            return ctx.HttpContext.RequestServices
-                .GetRequiredService<AppCookieEvents>()
-                .ValidatePrincipal(ctx);
         }
     };
-})
-// Cookie para autenticación externa (Google OAuth, etc.)
-.AddCookie("ExternalCookie", options =>
-{
-    options.Cookie.Name = "__Host-external_session";
-    options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.HttpOnly = true;
-    options.Cookie.Path = "/";
-
-    // Más corta para cookies externas
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    options.SlidingExpiration = true;
 });
-*/
-// Google OAuth (cuando sea implementado)
-// .AddGoogle(options =>
-// {
-//     options.ClientId = builder.Configuration["Google:ClientId"]!;
-//     options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
-//     options.SignInScheme = "ExternalCookie";
-// });
+
+builder.Services.AddAuthorization();
 
 // ========== Servicios Adicionales ==========
 builder.Services.AddLogging();
@@ -144,6 +123,7 @@ app.UseRouting();
 
 // ¡IMPORTANTE! Autenticación y Autorización
 app.UseAuthentication();    // Procesar esquemas de autenticación
+app.UseAuthorization();     // Aplicar políticas de autorización
 
 app.MapControllers();
 app.Run();

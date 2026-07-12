@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using comentapp.persistence;
 
@@ -11,9 +12,11 @@ using comentapp.persistence;
 namespace comentapp.persistence.Migrations
 {
     [DbContext(typeof(ComentappDbContext))]
-    partial class ComentappDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260712195626_MpConnectModel")]
+    partial class MpConnectModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
